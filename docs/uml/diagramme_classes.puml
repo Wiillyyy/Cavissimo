@@ -1,0 +1,65 @@
+@startuml diagramme_classes
+
+class Utilisateur {
+  - id : int
+  - identifiant : str
+  - email : str
+  - mot_de_passe_hash : str
+}
+
+class Cave {
+  - id : int
+  + ajouter_etagere(nom, capacite) : Etagere
+  + supprimer_etagere(etagere) : void
+  + occupation_globale() : float
+}
+
+class Etagere {
+  - id : int
+  - nom : str
+  - capacite_max : int
+  + occupation() : int
+  + peut_accueillir(n) : bool
+  + changer_capacite(nouvelle) : void
+}
+
+class Vin {
+  - id : int
+  - domaine : str
+  - nom_cuvee : str
+  - type : str
+  - millesime : int
+  - region : str
+  - description : str
+  - photo : str
+  + note_moyenne() : float
+}
+
+class Bouteille {
+  - id : int
+  - prix_achat : float
+  - date_ajout : date
+  - statut : str
+  + deplacer(nouvelle_etagere) : void
+  + archiver(note, commentaire) : Evaluation
+  + retirer() : void
+}
+
+class Evaluation {
+  - id : int
+  - note : int
+  - commentaire : str
+  - date : date
+  + modifier(note, commentaire) : void
+}
+
+Utilisateur "1" *-- "1" Cave : possède
+Cave "1" *-- "0..*" Etagere : contient
+Utilisateur "1" -- "0..*" Bouteille : possède
+Etagere "0..1" -- "0..*" Bouteille : stocke
+Vin "1" -- "0..*" Bouteille : référence
+Bouteille "1" -- "0..1" Evaluation : archivée avec
+Utilisateur "1" -- "0..*" Evaluation : rédige
+Vin "1" -- "0..*" Evaluation : concerne
+
+@enduml
