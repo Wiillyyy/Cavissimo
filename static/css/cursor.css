@@ -1,0 +1,22 @@
+/* Curseurs natifs du navigateur : aucune animation JavaScript nécessaire. */
+@media (pointer: fine) {
+  body {
+    cursor: url("../cursors/cavissimo.svg") 4 3, auto;
+  }
+
+  a, button, select, summary, [role="button"],
+  input[type="submit"], input[type="button"],
+  input[type="checkbox"], input[type="radio"] {
+    cursor: url("../cursors/cavissimo-action.svg") 4 3, pointer;
+  }
+
+  input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    cursor: text;
+  }
+
+  button:disabled, input:disabled, select:disabled,
+  fieldset:disabled button, fieldset:disabled input, fieldset:disabled select {
+    cursor: not-allowed;
+  }
+}

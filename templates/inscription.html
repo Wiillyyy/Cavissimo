@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titre %}Inscription - Cavissimo{% endblock %}
+{% block classe_page %}auth-page{% endblock %}
+{% block contenu %}
+<section class="auth-intro">
+  <p class="hero-eyebrow">Votre collection commence ici</p>
+  <h1 class="hero-title">Une place pour<br>chaque découverte.</h1>
+  <p class="hero-subtitle">Créez votre compte pour organiser vos étagères et garder une trace de vos bouteilles.</p>
+  <div class="auth-note"><p>Vos emplacements et vos prix d’achat restent privés.</p></div>
+  <div class="auth-note"><p>Les vins du catalogue sont partagés entre les membres.</p></div>
+</section>
+<section class="panel auth-panel" aria-labelledby="titre-inscription">
+  <p class="hero-eyebrow">Bienvenue dans Cavissimo</p>
+  <h2 id="titre-inscription">Créer un compte</h2>
+  {% for categorie, message in get_flashed_messages(with_categories=true) %}
+  <p class="message {{ categorie }}" role="alert">{{ message }}</p>
+  {% endfor %}
+  <form action="{{ url_for('inscription') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <label for="identifiant">Identifiant</label>
+    <input id="identifiant" name="identifiant" autocomplete="username" required minlength="3" maxlength="40" aria-describedby="aide-identifiant" value="{{ request.form.get('identifiant', '') }}">
+    <p class="field-help" id="aide-identifiant">Entre 3 et 40 caractères. La casse ne distingue pas deux comptes.</p>
+    <label for="email">Adresse email</label>
+    <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" value="{{ request.form.get('email', '') }}">
+    <label for="mot_de_passe">Mot de passe</label>
+    <input id="mot_de_passe" name="mot_de_passe" type="password" autocomplete="new-password" required minlength="12" maxlength="128" aria-describedby="aide-mot-de-passe">
+    <p class="field-help" id="aide-mot-de-passe">Entre 12 et 128 caractères. Une phrase longue est facile à retenir.</p>
+    <label for="confirmation">Confirmer le mot de passe</label>
+    <input id="confirmation" name="confirmation" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+    <button type="submit">Créer ma cave</button>
+  </form>
+  <p class="auth-link">Déjà membre ? <a href="{{ url_for('connexion') }}">Me connecter</a></p>
+</section>
+{% endblock %}

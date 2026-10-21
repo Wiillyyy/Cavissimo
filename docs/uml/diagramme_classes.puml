@@ -5,10 +5,16 @@ class Utilisateur {
   - identifiant : str
   - email : str
   - mot_de_passe_hash : str
+  + creer(identifiant, email, mot_de_passe) : Utilisateur
+  + verifier_mot_de_passe(mot_de_passe) : bool
 }
 
 class Cave {
   - id : int
+  - utilisateur_id : int
+  + MAX_ETAGERES : int = 5
+  + verifier_ajout_etagere(nombre_actuel) : void
+  + verifier_proprietaire(utilisateur_id) : void
   + ajouter_etagere(nom, capacite) : Etagere
   + supprimer_etagere(etagere) : void
   + occupation_globale() : float

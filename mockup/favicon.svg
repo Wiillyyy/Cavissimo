@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Cavissimo</title>
+  <rect width="64" height="64" rx="14" fill="#120b0d"/>
+  <path d="M19 12h26l-3 21c-1 12-19 12-20 0z" fill="#6e1423"/>
+  <path d="M20 13h24l-2 12H22z" fill="#1c1316"/>
+  <path d="M19 12h26l-3 21c-1 12-19 12-20 0zM32 43v10M23 54h18"
+        fill="none" stroke="#e3c988" stroke-width="3.5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

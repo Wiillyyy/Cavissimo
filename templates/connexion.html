@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titre %}Connexion - Cavissimo{% endblock %}
+{% block classe_page %}auth-page{% endblock %}
+{% block contenu %}
+<section class="auth-intro">
+  <p class="hero-eyebrow">Votre cave, sublimée</p>
+  <h1 class="hero-title">Le plaisir de retrouver<br>vos belles bouteilles.</h1>
+  <p class="hero-subtitle">Votre collection reste privée. Les références de vins se découvrent ensemble.</p>
+  <div class="auth-note"><p>Une cave à vous, des étagères à votre image.</p></div>
+  <div class="auth-note"><p>Un catalogue commun pour découvrir les vins des membres.</p></div>
+</section>
+<section class="panel auth-panel" aria-labelledby="titre-connexion">
+  <p class="hero-eyebrow">Bienvenue chez vous</p>
+  <h2 id="titre-connexion">Se connecter</h2>
+  {% for categorie, message in get_flashed_messages(with_categories=true) %}
+  <p class="message {{ categorie }}" role="alert">{{ message }}</p>
+  {% endfor %}
+  <form action="{{ url_for('connexion') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <label for="identifiant">Identifiant</label>
+    <input id="identifiant" name="identifiant" autocomplete="username" required maxlength="40" value="{{ request.form.get('identifiant', '') }}">
+    <label for="mot_de_passe">Mot de passe</label>
+    <input id="mot_de_passe" name="mot_de_passe" type="password" autocomplete="current-password" required maxlength="128">
+    <button type="submit">Entrer dans ma cave</button>
+  </form>
+  <p class="auth-link">Pas encore de compte ? <a href="{{ url_for('inscription') }}">Créer ma cave</a></p>
+</section>
+{% endblock %}

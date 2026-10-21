@@ -1,0 +1,36 @@
+@startuml connexion
+title Connexion et accès à la cave privée
+actor Utilisateur as personne
+participant "Navigateur" as navigateur
+participant "app.py / Flask" as web
+participant "database.py" as persistance
+participant "Utilisateur (models.py)" as compte
+database SQLite as base
+
+personne -> navigateur : Saisir identifiant et mot de passe
+navigateur -> web : POST /connexion + jeton anti-CSRF
+web -> web : Vérifier le jeton du formulaire
+web -> persistance : authentifier(identifiant, mot_de_passe)
+persistance -> base : SELECT paramétré par identifiant normalisé
+base --> persistance : Compte ou aucune ligne
+alt Compte trouvé
+  persistance -> compte : verifier_mot_de_passe(mot_de_passe)
+  compte --> persistance : Résultat de check_password_hash()
+else Compte inconnu
+  persistance -> persistance : Vérifier un hash factice
+end
+alt Identifiant et mot de passe valides
+  persistance --> web : Objet Utilisateur
+  web -> web : Vider la session et renouveler le jeton
+  web --> navigateur : Session signée + redirection vers /
+  navigateur -> web : GET / avec cookie de session
+  web -> persistance : consulter_cave(utilisateur connecté)
+  persistance -> base : Lire la cave et le stock de ce propriétaire
+  base --> persistance : Données privées de ce compte
+  persistance --> web : Stock privé + catalogue partagé
+  web --> navigateur : Page HTML de sa cave
+else Échec de connexion
+  persistance --> web : Aucun utilisateur authentifié
+  web --> navigateur : 401 / Identifiant ou mot de passe incorrect
+end
+@enduml

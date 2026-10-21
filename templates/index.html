@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cave.css') }}">
+{% endblock %}
+{% block contenu %}
+
+    <section class="hero">
+      <p class="hero-eyebrow">Le plaisir de collectionner</p>
+      <h1 class="hero-title">Bienvenue, {{ g.utilisateur.identifiant }}.</h1>
+      <p class="hero-subtitle">Créez vos étagères, choisissez vos vins et trouvez une place à chaque bouteille.</p>
+      <p class="prototype">Votre stock est privé · Le catalogue est partagé entre les membres</p>
+    </section>
+
+    {% for categorie, message in get_flashed_messages(with_categories=true) %}
+      <p class="message {{ categorie }}" role="alert">{{ message }}</p>
+    {% endfor %}
+
+    <section class="stats" aria-label="Indicateurs de la cave">
+      <article class="stat"><p>Bouteilles en stock</p><strong>{{ stats.bouteilles }}</strong><span>{{ stats.references }} référence(s) distincte(s)</span></article>
+      <article class="stat"><p>Étagères</p><strong>{{ stats.etageres }}</strong><span>{{ stats.capacite }} place(s) au total</span></article>
+      <article class="stat"><p>Occupation globale</p><strong>{{ (stats.occupation|string + ' %') if stats.occupation is not none else '-' }}</strong><span>{{ 'Créez votre première étagère' if stats.occupation is none else 'de la capacité totale' }}</span></article>
+      <article class="stat"><p>Valeur du stock</p><strong>{{ stats.valeur_centimes|euros }}</strong><span>Selon vos prix d’achat</span></article>
+    </section>
+
+    <section id="etageres" class="section">
+      <div class="section-title"><div><p class="hero-eyebrow">01 · Votre espace personnel</p><h2>Votre cave, en relief.</h2></div><span class="cellar-count">{{ etageres|length }} / {{ max_etageres }} étagères installées</span></div>
+      <div class="cellar-room">
+        <div class="cellar-room-header"><div><p>LA RÉSERVE</p><span>Collection de {{ g.utilisateur.identifiant }}</span></div><span class="cellar-private">Cave privée</span></div>
+        <div class="cellar-scroll" tabindex="0" role="region" aria-label="Les emplacements de votre cave, défilement horizontal sur petit écran">
+          <div class="cellar-scene">
+            {% for numero in range(emplacements_etageres) %}
+            {% set etagere = etageres[numero] if numero < etageres|length else none %}
+            <article class="cellar-slot {{ 'is-built' if etagere else 'is-vacant' }}">
+              <span class="slot-number">{{ '%02d'|format(numero + 1) }}</span>
+              {% if not etagere %}<a class="slot-create" href="#creer-etagere" aria-label="Créer l'étagère de l'emplacement {{ numero + 1 }}">{% endif %}
+              <div class="rack-3d" aria-hidden="true">
+                <div class="rack-face">
+                  {% for niveau in range(2) %}
+                  <div class="rack-tier">
+                    {% for colonne in range(5) %}
+                    {% set position = niveau * 5 + colonne %}
+                    <svg class="rack-bottle {{ 'is-filled' if etagere and position < etagere.occupation else '' }}" viewBox="0 0 24 64" focusable="false">
+                      <path class="bottle-body" d="M9 4h6v15c0 5 5 6 5 12v26c0 4-2 5-8 5s-8-1-8-5V31c0-6 5-7 5-12Z"/>
+                      <rect class="bottle-cap" x="8" y="2" width="8" height="10" rx="1.5"/>
+                      <rect class="bottle-label" x="5.5" y="36" width="13" height="15" rx="1"/>
+                      <path class="bottle-mark" d="M9 42h6m-5 4h4"/>
+                      <path class="bottle-shine" d="M7 31v22"/>
+                    </svg>
+                    {% endfor %}
+                  </div>
+                  {% endfor %}
+                  <span class="rack-plaque">{{ '%02d'|format(numero + 1) }}</span>
+                  {% if not etagere %}<span class="rack-invite"><span>+</span>Installer</span>{% endif %}
+                </div>
+              </div>
+              <div class="slot-caption">
+                <h3>{{ etagere.nom if etagere else 'À imaginer' }}</h3>
+                {% if etagere %}
+                <p>{{ etagere.occupation }} <span>/ {{ etagere.capacite_max }} bouteilles</span></p>
+                <progress value="{{ etagere.occupation }}" max="{{ etagere.capacite_max }}" aria-label="Occupation de {{ etagere.nom }}"></progress>
+                <span class="slot-status">{{ etagere.capacite_max - etagere.occupation }} place(s) libre(s)</span>
+                {% if etagere.occupation > 10 %}<span class="slot-overflow">+ {{ etagere.occupation - 10 }} bouteille(s) hors aperçu</span>{% endif %}
+                {% else %}<p>Emplacement disponible</p><span class="slot-status">Créer une étagère ↗</span>{% endif %}
+              </div>
+              {% if not etagere %}</a>{% endif %}
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="cellar-room-footer"><span><i class="legend-dot" aria-hidden="true"></i> Étagère installée</span><span><i class="legend-dot vacant" aria-hidden="true"></i> Emplacement libre</span><span class="cellar-scroll-hint">Faites défiler pour explorer votre cave ↔</span></div>
+      </div>
+
+      <div class="panel shelf-builder" id="creer-etagere">
+        <div class="builder-intro"><p class="hero-eyebrow">À vous de composer</p><h3>{{ 'Votre cave est complète.' if etageres|length >= max_etageres else 'La prochaine a déjà sa place.' }}</h3><p>{{ 'Vos cinq emplacements sont occupés.' if etageres|length >= max_etageres else 'Un nom, une capacité, et votre nouvelle étagère prend vie.' }}</p></div>
+        <form action="{{ url_for('creer_etagere') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <fieldset class="builder-fields" {% if etageres|length >= max_etageres %}disabled{% endif %}>
+            <div><label for="nom">Nom de l’étagère</label><input id="nom" name="nom" placeholder="Les rouges de Savoie" required maxlength="100" value="{{ request.form.get('nom', '') }}"></div>
+            <div><label for="capacite">Capacité</label><input id="capacite" name="capacite" type="number" min="1" max="1000000" step="1" required value="{{ request.form.get('capacite', '10') }}"></div>
+            <button type="submit">Créer l’étagère <span aria-hidden="true">+</span></button>
+          </fieldset>
+        </form>
+      </div>
+    </section>
+
+    <section id="catalogue" class="section">
+      <div class="section-title"><div><p class="hero-eyebrow">02 · Découvrir</p><h2>Le catalogue des vins</h2></div><span>{{ vins|length }} référence(s)</span></div>
+      <div class="split">
+        <div class="wine-grid">
+          {% for vin in vins %}
+          <article class="panel wine-card">
+            <span class="badge">{{ vin.type }} · {{ vin.millesime }}</span>
+            <h3>{{ vin.nom_cuvee }}</h3><p>{{ vin.domaine }}</p><span>{{ vin.region }}</span>
+            <p class="rating">Non évalué</p>
+          </article>
+          {% else %}
+          <div class="panel empty"><h3>Votre première référence</h3><p>Une fiche décrit un vin. Vous pourrez ensuite en ranger plusieurs exemplaires.</p></div>
+          {% endfor %}
+        </div>
+        <form class="panel" action="{{ url_for('creer_vin') }}" method="post">
+          <h3>Ajouter un vin au catalogue</h3>
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <label for="domaine">Domaine viticole</label><input id="domaine" name="domaine" required maxlength="150" value="{{ request.form.get('domaine', '') }}">
+          <label for="nom_cuvee">Nom ou cuvée</label><input id="nom_cuvee" name="nom_cuvee" required maxlength="150" value="{{ request.form.get('nom_cuvee', '') }}">
+          <div class="form-row">
+            <div><label for="type">Type de vin</label><select id="type" name="type" required>{% for type in ['rouge', 'blanc', 'rosé', 'effervescent'] %}<option value="{{ type }}" {% if request.form.get('type') == type %}selected{% endif %}>{{ type|capitalize }}</option>{% endfor %}</select></div>
+            <div><label for="millesime">Millésime</label><input id="millesime" name="millesime" type="number" min="1" max="1000000" required placeholder="2022" value="{{ request.form.get('millesime', '') }}"></div>
+          </div>
+          <label for="region">Région</label><input id="region" name="region" required maxlength="150" value="{{ request.form.get('region', '') }}">
+          <button type="submit">Enregistrer le vin</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="stock" class="section">
+      <div class="section-title"><div><p class="hero-eyebrow">03 · Collectionner</p><h2>Mes bouteilles</h2></div><span>{{ stats.bouteilles }} exemplaire(s)</span></div>
+      <form class="panel stock-form" action="{{ url_for('ajouter_bouteilles') }}" method="post">
+        <h3>Ranger des bouteilles</h3>
+        <p class="hint">Choisissez une référence et une étagère. Le prix s’applique à chaque bouteille.</p>
+        {% if not vins or not etageres %}<p class="hint">Créez d’abord une étagère et une référence de vin pour commencer.</p>{% endif %}
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <fieldset {% if not vins or not etageres %}disabled{% endif %}>
+          <div class="stock-fields">
+            <div><label for="vin_id">Référence de vin</label><select id="vin_id" name="vin_id" required><option value="">Choisir un vin</option>{% for vin in vins %}<option value="{{ vin.id }}" {% if request.form.get('vin_id') == vin.id|string %}selected{% endif %}>{{ vin.domaine }} · {{ vin.nom_cuvee }} · {{ vin.type }} · {{ vin.millesime }} · {{ vin.region }}</option>{% endfor %}</select></div>
+            <div><label for="etagere_id">Étagère</label><select id="etagere_id" name="etagere_id" required><option value="">Choisir une étagère</option>{% for etagere in etageres %}<option value="{{ etagere.id }}" {% if request.form.get('etagere_id') == etagere.id|string %}selected{% endif %}>{{ etagere.nom }} ({{ etagere.capacite_max - etagere.occupation }} libres)</option>{% endfor %}</select></div>
+            <div><label for="quantite">Quantité</label><input id="quantite" name="quantite" type="number" min="1" max="1000000" required value="{{ request.form.get('quantite', '1') }}"></div>
+            <div><label for="prix_achat">Prix unitaire (€)</label><input id="prix_achat" name="prix_achat" type="number" min="0" max="1000000" step="0.01" required placeholder="12,50" value="{{ request.form.get('prix_achat', '') }}"></div>
+          </div>
+          <button type="submit">Ajouter à ma cave</button>
+        </fieldset>
+      </form>
+      {% if bouteilles %}
+      <div class="panel table-wrap"><table>
+        <caption>Chaque ligne représente une bouteille physique.</caption>
+        <thead><tr><th scope="col">N°</th><th scope="col">Vin</th><th scope="col">Type / Année</th><th scope="col">Étagère</th><th scope="col">Prix d’achat</th><th scope="col">Ajoutée le</th></tr></thead>
+        <tbody>{% for bouteille in bouteilles %}<tr><td>#{{ bouteille.id }}</td><td><strong>{{ bouteille.nom_cuvee }}</strong><br><span>{{ bouteille.domaine }}</span></td><td>{{ bouteille.type }} · {{ bouteille.millesime }}</td><td>{{ bouteille.etagere }}</td><td>{{ bouteille.prix_centimes|euros }}</td><td>{{ bouteille.date_ajout }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+      {% else %}<p class="empty-stock">Votre cave est prête à accueillir ses premières bouteilles.</p>{% endif %}
+    </section>
+{% endblock %}

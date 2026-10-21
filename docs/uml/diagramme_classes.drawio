@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
 <mxfile host="app.diagrams.net">
   <diagram name="Diagramme de classes - Cavissimo" id="classes-cavissimo">
     <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="900" math="0" shadow="0">
@@ -5,29 +6,29 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <!-- Utilisateur -->
+
         <mxCell id="2" value="Utilisateur" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="200" height="82" as="geometry" />
+          <mxGeometry x="40" y="40" width="350" height="132" as="geometry" />
         </mxCell>
         <mxCell id="3" value="- id: int&#10;- identifiant: str&#10;- email: str&#10;- mot_de_passe_hash: str" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="2">
-          <mxGeometry y="26" width="200" height="56" as="geometry" />
+          <mxGeometry y="26" width="350" height="56" as="geometry" />
         </mxCell>
 
-        <!-- Cave -->
+
         <mxCell id="6" value="Cave" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="40" y="200" width="200" height="100" as="geometry" />
+          <mxGeometry x="40" y="200" width="350" height="154" as="geometry" />
         </mxCell>
-        <mxCell id="7" value="- id: int" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="6">
-          <mxGeometry y="26" width="200" height="14" as="geometry" />
+        <mxCell id="7" value="- id: int&#10;- utilisateur_id: int&#10;+ MAX_ETAGERES: int = 5" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="6">
+          <mxGeometry y="26" width="350" height="42" as="geometry" />
         </mxCell>
         <mxCell id="8" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="6">
-          <mxGeometry y="40" width="200" height="8" as="geometry" />
+          <mxGeometry y="68" width="350" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="9" value="+ ajouter_etagere(nom, capacite): Etagere&#10;+ supprimer_etagere(etagere): void&#10;+ occupation_globale(): float" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="6">
-          <mxGeometry y="48" width="200" height="42" as="geometry" />
+        <mxCell id="9" value="+ verifier_ajout_etagere(nombre_actuel): void&#10;+ verifier_proprietaire(utilisateur_id): void&#10;+ ajouter_etagere(nom, capacite): Etagere&#10;+ supprimer_etagere(etagere): void&#10;+ occupation_globale(): float" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;fontSize=10;" vertex="1" parent="6">
+          <mxGeometry y="76" width="350" height="74" as="geometry" />
         </mxCell>
 
-        <!-- Etagere -->
+
         <mxCell id="10" value="Etagere" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="40" y="360" width="200" height="128" as="geometry" />
         </mxCell>
@@ -41,7 +42,7 @@
           <mxGeometry y="76" width="200" height="42" as="geometry" />
         </mxCell>
 
-        <!-- Vin -->
+
         <mxCell id="14" value="Vin" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="440" y="40" width="220" height="178" as="geometry" />
         </mxCell>
@@ -55,7 +56,7 @@
           <mxGeometry y="146" width="220" height="30" as="geometry" />
         </mxCell>
 
-        <!-- Bouteille -->
+
         <mxCell id="18" value="Bouteille" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="440" y="280" width="220" height="140" as="geometry" />
         </mxCell>
@@ -69,7 +70,7 @@
           <mxGeometry y="90" width="220" height="42" as="geometry" />
         </mxCell>
 
-        <!-- Evaluation -->
+
         <mxCell id="22" value="Evaluation" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
           <mxGeometry x="440" y="480" width="220" height="96" as="geometry" />
         </mxCell>
@@ -83,7 +84,7 @@
           <mxGeometry y="90" width="220" height="24" as="geometry" />
         </mxCell>
 
-        <!-- Utilisateur possede Cave (composition) -->
+
         <mxCell id="30" style="endArrow=none;startArrow=diamondThin;startFill=1;html=1;rounded=0;" edge="1" parent="1" source="2" target="6">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -94,7 +95,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Cave possede Etagere (composition) -->
+
         <mxCell id="33" style="endArrow=none;startArrow=diamondThin;startFill=1;html=1;rounded=0;" edge="1" parent="1" source="6" target="10">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -105,7 +106,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Utilisateur associe Bouteille (association, proprietaire) -->
+
         <mxCell id="36" style="endArrow=none;startArrow=none;html=1;rounded=0;" edge="1" parent="1" source="2" target="18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -116,7 +117,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Etagere associe Bouteille (association, stocke) -->
+
         <mxCell id="39" style="endArrow=none;startArrow=none;html=1;rounded=0;" edge="1" parent="1" source="10" target="18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -127,7 +128,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Vin associe Bouteille (association, reference) -->
+
         <mxCell id="42" style="endArrow=none;startArrow=none;html=1;rounded=0;" edge="1" parent="1" source="14" target="18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -138,7 +139,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Bouteille associe Evaluation (association, archivee avec) -->
+
         <mxCell id="45" style="endArrow=none;startArrow=none;html=1;rounded=0;" edge="1" parent="1" source="18" target="22">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -149,7 +150,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Utilisateur associe Evaluation (association, redige) -->
+
         <mxCell id="48" style="endArrow=none;startArrow=none;html=1;rounded=0;" edge="1" parent="1" source="2" target="22">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -160,7 +161,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-        <!-- Vin associe Evaluation (association, concerne) -->
+
         <mxCell id="51" style="endArrow=none;startArrow=none;html=1;rounded=0;" edge="1" parent="1" source="14" target="22">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -171,7 +172,7 @@
           <mxGeometry x="0.7" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
         </mxCell>
 
-      </root>
+      <mxCell id="comptes-user-line" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="2"><mxGeometry y="82" width="350" height="8" as="geometry" /></mxCell><mxCell id="comptes-user-methodes" value="+ creer(identifiant, email, mot_de_passe): Utilisateur&#10;+ verifier_mot_de_passe(mot_de_passe): bool" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;fontSize=10;" vertex="1" parent="2"><mxGeometry y="90" width="350" height="34" as="geometry" /></mxCell></root>
     </mxGraphModel>
   </diagram>
 </mxfile>
