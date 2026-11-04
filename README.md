@@ -10,17 +10,21 @@ Chaque utilisateur possède une cave privée. Les références du catalogue de v
 
 ![Vue de la cave avec une étagère installée et quatre emplacements libres](docs/images/cave-demo.png)
 
-Aperçu avec des données de démonstration : une étagère contenant huit bouteilles sur dix places. Les quatre autres emplacements sont disponibles. Ces données ne sont pas créées automatiquement au lancement.
+Aperçu avec des données de démonstration : cinq étagères de capacités 3, 5, 8, 10 et 20. Le dessin montre les emplacements disponibles jusqu’à dix ; les compteurs affichent le stock complet. Ces données ne sont pas créées automatiquement au lancement.
 
 ## Fonctionnalités disponibles
 
 - Inscription, connexion et déconnexion avec création automatique d’une cave par compte.
 - Stock, étagères et prix d’achat privés ; catalogue de vins commun aux utilisateurs connectés.
 - Création de cinq étagères au maximum par cave, avec un nom unique dans cette cave.
+- Modification du nom et de la capacité depuis le site : nom unique dans la cave et capacité au moins égale au stock présent.
+- Suppression des étagères vides après confirmation, avec remise à disposition de leur emplacement.
 - Création de références de vin et réutilisation des références existantes.
 - Ajout d’un ou plusieurs exemplaires avec leur prix unitaire et leur date d’entrée.
 - Contrôle de capacité : un lot est entièrement ajouté ou entièrement refusé.
 - Consultation de chaque bouteille physique, des étagères et du catalogue.
+- Retrait définitif d’un exemplaire après confirmation, avec libération de sa place et conservation du vin au catalogue.
+- Modification du prix d’achat de chaque bouteille, avec actualisation de la valeur du stock.
 - Tableau de bord : bouteilles en stock, références distinctes en stock, nombre d’étagères, occupation globale et valeur du stock.
 - Conservation des données dans une base SQLite locale.
 
@@ -78,9 +82,10 @@ Par défaut, la clé de session est générée au lancement : après un redémar
 La direction visuelle repose sur un fond sombre, des accents dorés et bordeaux et une représentation des étagères en bois.
 
 - La cave affiche cinq emplacements en perspective. Les étagères créées apparaissent en bois ; les emplacements libres restent gris et mènent au formulaire de création.
-- Chaque dessin comporte deux rangées de cinq silhouettes de bouteilles. Les exemplaires présents sont colorés, les places non occupées restent en contour. Au-delà de dix bouteilles, un indicateur affiche les exemplaires supplémentaires. Les compteurs et les jauges utilisent toujours le stock réel.
+- Le dessin affiche autant de silhouettes que la capacité, jusqu’à dix au maximum. Pour une capacité de 1 à 5, une seule rangée est centrée ; de 6 à 10, deux rangées sont utilisées et la seconde est centrée. Les bouteilles présentes sont colorées et les places libres restent en contour. Les compteurs et les jauges utilisent toujours le stock réel, y compris au-delà de dix bouteilles. Les noms occupent une zone de deux lignes pour aligner les indicateurs ; les noms plus longs sont tronqués visuellement et restent disponibles en entier au survol.
 - La capacité est préremplie à 10, mais reste réglable. Le dessin est un aperçu et ne fixe pas la capacité réelle de stockage.
 - La limite de cinq étagères est un choix du projet. La règle se trouve dans `Cave.MAX_ETAGERES` et est vérifiée côté serveur dans une transaction. D’éventuelles anciennes étagères au-delà de cette limite sont conservées et restent visibles.
+- Les étagères actives se tournent de face au survol de la souris ou au focus clavier, puis retrouvent leur perspective initiale. Les emplacements libres conservent leur effet de survol distinct.
 - Sur mobile, la scène des étagères et le tableau des bouteilles peuvent défiler horizontalement.
 - Le verre animé apparaît uniquement lors d’une actualisation de page, pendant 1,4 seconde avant son fondu. Les navigations et les connexions/déconnexions ne déclenchent pas l’animation. Elle est désactivée si le navigateur demande une réduction des animations.
 - Un favicon en forme de verre à vin, un curseur doré et bordeaux sur ordinateur et une icône GitHub complètent l’interface. Les champs gardent le curseur texte.
@@ -140,7 +145,11 @@ Par exemple, `POST /bouteilles` appelle `database.ajouter_bouteilles()`. La fonc
 | `Vin` | Décrire une référence du catalogue et valider ses informations. |
 | `Bouteille` | Représenter un exemplaire avec son vin, son prix, sa date, son statut et son emplacement en mémoire. |
 
-La méthode `Etagere.changer_capacite()` existe dans le modèle et est testée ; le formulaire de modification d’une étagère reste à développer. Les opérations persistantes sont coordonnées par `database.py`, sans dépendance aux requêtes HTTP.
+Le lien « Modifier l’étagère » ouvre le formulaire de nom et de capacité. `POST /etageres/<id>/modifier` vérifie le propriétaire, appelle `Etagere.renommer()` et `Etagere.changer_capacite()`, puis enregistre les deux valeurs ensemble. Un nom vide, de plus de 100 caractères ou déjà utilisé dans cette cave est refusé. La route de modification de capacité seule reste disponible. Un ajout de bouteilles et une modification de capacité ne peuvent pas se chevaucher pendant la vérification du stock grâce à la transaction. Le lien « Supprimer l’étagère » demande une confirmation avant le POST. La route `POST /etageres/<id>/supprimer` contrôle le propriétaire et utilise `Etagere.verifier_suppression()`. Une étagère non vide est refusée ; la transaction couvre le contrôle et la suppression. Dans « Mes bouteilles », le lien « Retirer » de chaque ligne ouvre une confirmation. `POST /bouteilles/<id>/retirer` contrôle la session, le jeton et la confirmation ; `database.retirer_bouteille()` vérifie le propriétaire puis supprime une seule ligne de stock dans une transaction. La référence de vin reste au catalogue. Après le retrait du dernier exemplaire, l’étagère peut être supprimée.
+
+Le lien « Modifier le prix » sur chaque bouteille utilise `POST /bouteilles/<id>/prix`. Le prix est validé avec `Decimal`, converti en centimes entiers puis vérifié par `Bouteille.modifier_prix()`. Une mise à jour ne modifie ni les autres exemplaires, ni la référence du vin, ni la date d’ajout.
+
+Les opérations persistantes sont coordonnées par `database.py`, sans dépendance aux requêtes HTTP.
 
 ## Modèle relationnel
 
@@ -171,7 +180,7 @@ Cette version est prévue pour le serveur local HTTP. La récupération du mot d
 
 ## Diagrammes UML
 
-Le diagramme ci-dessous décrit le **modèle cible complet**. `Evaluation`, l’archivage, le retrait, les déplacements, la moyenne communautaire et certaines méthodes de `Cave` restent à implémenter. Les identifiants des vins, étagères et bouteilles sont actuellement portés par les lignes SQLite, sans attribut `id` dans ces trois classes Python.
+Le diagramme ci-dessous décrit le **modèle cible complet**. `Evaluation`, l’archivage, les déplacements, la moyenne communautaire et certaines méthodes de `Cave` restent à implémenter. Le retrait définitif est actuellement porté par le service `database.retirer_bouteille()` ; la méthode `Bouteille.retirer()` du modèle cible reste à implémenter dans la classe. Les identifiants des vins, étagères et bouteilles sont actuellement portés par les lignes SQLite, sans attribut `id` dans ces trois classes Python.
 
 ```mermaid
 classDiagram
@@ -204,6 +213,8 @@ classDiagram
         +occupation() int
         +peut_accueillir(n) bool
         +changer_capacite(nouvelle) void
+        +renommer(nom) void
+        +verifier_suppression() void
     }
 
     class Vin {
@@ -223,6 +234,7 @@ classDiagram
         -float prix_achat
         -date date_ajout
         -str statut
+        +modifier_prix(prix_achat) void
         +deplacer(nouvelle_etagere) void
         +archiver(note, commentaire) Evaluation
         +retirer() void
@@ -261,18 +273,17 @@ Depuis la racine du dépôt, après installation :
 
 Sous Linux ou macOS, utiliser `.venv/bin/python` à la place de `.\.venv\Scripts\python.exe`.
 
-La suite contient **20 tests** couvrant les capacités, les exemplaires distincts, le plafond de cinq étagères, le refus des ajouts partiels, les doublons, les saisies invalides, les comptes, les sessions, l’anti-CSRF, les tentatives d’injection SQL, l’échappement HTML, l’isolation des caves, la persistance et la migration de l’ancienne base.
+La suite contient **35 tests** couvrant les capacités, les exemplaires distincts, le plafond de cinq étagères, la modification persistante du nom et de la capacité avec refus des doublons et des opérations partielles, la modification du prix d’un seul exemplaire et du total du stock, les contrôles d’accès, la suppression d’étagères vides et les refus sans perte de bouteilles, le retrait d’un seul exemplaire et le vidage d’une étagère avant suppression, le dessin adapté aux capacités, le refus des ajouts partiels, les doublons, les saisies invalides, les comptes, les sessions, l’anti-CSRF, les tentatives d’injection SQL, l’échappement HTML, l’isolation des caves, la persistance et la migration de l’ancienne base.
 
 Les tests web utilisent des bases temporaires indépendantes de la cave personnelle. `demo.py` illustre les objets en mémoire avec une étagère de capacité 3 et quatre tentatives d’ajout : trois réussites et un refus. Il ne remplit pas la base du site.
 
 ## Fonctionnalités restantes
 
 - Modification du profil utilisateur.
-- Renommage, modification de capacité depuis le site et suppression d’une étagère vide.
-- Modification des informations autorisées, déplacement et retrait d’une bouteille.
+- Déplacement des bouteilles entre étagères.
 - Archivage après dégustation, historique personnel, évaluations sur 20 et commentaires.
 - Consultation et modification des évaluations autorisées, calcul de la moyenne communautaire.
 - Descriptions et photos des vins, recherche, filtres et tris.
 - Diagramme de cas d’utilisation et mise à jour des autres diagrammes selon le code final.
 - Jeu de démonstration complet avec au moins deux comptes, plusieurs étagères et vins, des exemplaires identiques et des évaluations.
-- Tests des fonctionnalités restantes, notamment retrait, déplacement, archivage et moyenne communautaire.
+- Tests des fonctionnalités restantes, notamment déplacement, archivage et moyenne communautaire.

@@ -207,6 +207,58 @@ def creer_vin(chemin, domaine, nom_cuvee, type_vin, millesime, region):
         return resultat.rowcount == 1
 
 
+def charger_etagere(base, utilisateur_id, etagere_id):
+    """Reconstitue une étagère et ses objets après contrôle du propriétaire."""
+    cave = obtenir_cave(base, utilisateur_id)
+    ligne_etagere = base.execute(
+        "SELECT * FROM etageres WHERE id = ? AND cave_id = ?", (etagere_id, cave.id),
+    ).fetchone()
+    if ligne_etagere is None:
+        raise PermissionError("Étagère inaccessible.")
+    etagere = Etagere(ligne_etagere["nom"], ligne_etagere["capacite_max"])
+    stock = base.execute("""
+        SELECT b.prix_centimes, v.* FROM bouteilles b
+        JOIN vins v ON v.id = b.vin_id WHERE b.etagere_id = ?
+    """, (etagere_id,)).fetchall()
+    for ligne in stock:
+        vin = Vin(ligne["domaine"], ligne["nom_cuvee"], ligne["type"], ligne["millesime"], ligne["region"])
+        etagere.ajouter_bouteille(Bouteille(vin, ligne["prix_centimes"] / 100))
+    return etagere
+
+
+def supprimer_etagere(chemin, utilisateur_id, etagere_id):
+    with connexion(chemin) as base:
+        # Aucun ajout ne peut se glisser entre le contrôle et la suppression.
+        base.execute("BEGIN IMMEDIATE")
+        etagere = charger_etagere(base, utilisateur_id, etagere_id)
+        etagere.verifier_suppression()
+        base.execute("DELETE FROM etageres WHERE id = ?", (etagere_id,))
+
+
+def modifier_etagere(chemin, utilisateur_id, etagere_id, nom, capacite):
+    try:
+        with connexion(chemin) as base:
+            base.execute("BEGIN IMMEDIATE")
+            etagere = charger_etagere(base, utilisateur_id, etagere_id)
+            etagere.renommer(nom)
+            etagere.changer_capacite(capacite)
+            # Le nom et la capacité sont enregistrés ensemble ou pas du tout.
+            base.execute("""
+                UPDATE etageres SET nom = ?, nom_cle = ?, capacite_max = ? WHERE id = ?
+            """, (etagere.nom, normaliser(etagere.nom), etagere.capacite_max, etagere_id))
+    except sqlite3.IntegrityError:
+        raise ValueError("Une étagère porte déjà ce nom dans votre cave.") from None
+
+
+def changer_capacite(chemin, utilisateur_id, etagere_id, nouvelle):
+    with connexion(chemin) as base:
+        # Le stock reste stable pendant la vérification et la modification.
+        base.execute("BEGIN IMMEDIATE")
+        etagere = charger_etagere(base, utilisateur_id, etagere_id)
+        etagere.changer_capacite(nouvelle)
+        base.execute("UPDATE etageres SET capacite_max = ? WHERE id = ?", (etagere.capacite_max, etagere_id))
+
+
 def ajouter_bouteilles(chemin, utilisateur_id, etagere_id, vin_id, quantite, prix_centimes):
     Etagere._verifier_entier_positif(quantite)
     if (not isinstance(prix_centimes, int) or isinstance(prix_centimes, bool)
@@ -217,31 +269,13 @@ def ajouter_bouteilles(chemin, utilisateur_id, etagere_id, vin_id, quantite, pri
         # Le verrou couvre la lecture du stock ET les insertions : deux requêtes
         # simultanées ne peuvent pas réserver la même place.
         base.execute("BEGIN IMMEDIATE")
-        cave = obtenir_cave(base, utilisateur_id)
-        ligne_etagere = base.execute(
-            "SELECT * FROM etageres WHERE id = ? AND cave_id = ?", (etagere_id, cave.id),
-        ).fetchone()
-        if ligne_etagere is None:
-            # Même refus pour un identifiant inexistant et pour l'étagère d'autrui.
-            raise PermissionError("Étagère inaccessible.")
+        etagere = charger_etagere(base, utilisateur_id, etagere_id)
         ligne_vin = base.execute("SELECT * FROM vins WHERE id = ?", (vin_id,)).fetchone()
-        if ligne_etagere is None or ligne_vin is None:
+        if ligne_vin is None:
             raise ValueError("Sélectionne une étagère et un vin existants.")
 
-        etagere = Etagere(ligne_etagere["nom"], ligne_etagere["capacite_max"])
         vin = Vin(ligne_vin["domaine"], ligne_vin["nom_cuvee"], ligne_vin["type"],
                   ligne_vin["millesime"], ligne_vin["region"])
-
-        # Reconstitue les exemplaires déjà présents pour appliquer les règles
-        # de la classe Etagere, comme dans la démonstration en mémoire.
-        stock = base.execute("""
-            SELECT b.prix_centimes, v.* FROM bouteilles b
-            JOIN vins v ON v.id = b.vin_id WHERE b.etagere_id = ?
-        """, (etagere_id,)).fetchall()
-        for ligne in stock:
-            vin_stocke = Vin(ligne["domaine"], ligne["nom_cuvee"], ligne["type"],
-                             ligne["millesime"], ligne["region"])
-            etagere.ajouter_bouteille(Bouteille(vin_stocke, ligne["prix_centimes"] / 100))
 
         if not etagere.peut_accueillir(quantite):
             places = etagere.capacite_max - etagere.occupation()
@@ -254,6 +288,39 @@ def ajouter_bouteilles(chemin, utilisateur_id, etagere_id, vin_id, quantite, pri
                 INSERT INTO bouteilles (vin_id, etagere_id, prix_centimes, date_ajout)
                 VALUES (?, ?, ?, ?)
             """, (vin_id, etagere_id, prix_centimes, bouteille.date_ajout.isoformat()))
+
+
+def charger_bouteille(base, utilisateur_id, bouteille_id):
+    ligne = base.execute("""
+        SELECT b.prix_centimes, v.* FROM bouteilles b
+        JOIN vins v ON v.id = b.vin_id
+        JOIN etageres e ON e.id = b.etagere_id
+        JOIN caves c ON c.id = e.cave_id
+        WHERE b.id = ? AND c.utilisateur_id = ?
+    """, (bouteille_id, utilisateur_id)).fetchone()
+    if ligne is None:
+        raise PermissionError("Bouteille inaccessible.")
+    vin = Vin(ligne["domaine"], ligne["nom_cuvee"], ligne["type"], ligne["millesime"], ligne["region"])
+    return Bouteille(vin, ligne["prix_centimes"] / 100)
+
+
+def modifier_prix_bouteille(chemin, utilisateur_id, bouteille_id, prix_centimes):
+    if (not isinstance(prix_centimes, int) or isinstance(prix_centimes, bool)
+            or prix_centimes < 0):
+        raise ValueError("Le prix doit être positif ou nul, exprimé en centimes.")
+    with connexion(chemin) as base:
+        base.execute("BEGIN IMMEDIATE")
+        bouteille = charger_bouteille(base, utilisateur_id, bouteille_id)
+        bouteille.modifier_prix(prix_centimes / 100)
+        base.execute("UPDATE bouteilles SET prix_centimes = ? WHERE id = ?", (prix_centimes, bouteille_id))
+
+
+def retirer_bouteille(chemin, utilisateur_id, bouteille_id):
+    """Retire un exemplaire physique en conservant sa référence de vin."""
+    with connexion(chemin) as base:
+        base.execute("BEGIN IMMEDIATE")
+        charger_bouteille(base, utilisateur_id, bouteille_id)
+        base.execute("DELETE FROM bouteilles WHERE id = ?", (bouteille_id,))
 
 
 def consulter_cave(chemin, utilisateur_id):

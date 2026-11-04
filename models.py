@@ -77,16 +77,19 @@ class Bouteille:
     def __init__(self, vin: Vin, prix_achat: float):
         if not isinstance(vin, Vin):
             raise ValueError("La bouteille doit être associée à un vin.")
+        self.vin = vin
+        self.modifier_prix(prix_achat)
+        self.date_ajout = date.today()
+        self.statut = "en stock"
+        self.etagere = None
+
+    def modifier_prix(self, prix_achat: float):
         if (isinstance(prix_achat, bool)
                 or not isinstance(prix_achat, (int, float))
                 or not isfinite(prix_achat) or prix_achat < 0):
             raise ValueError("Le prix doit être un nombre positif ou nul.")
 
-        self.vin = vin
         self.prix_achat = prix_achat
-        self.date_ajout = date.today()
-        self.statut = "en stock"
-        self.etagere = None
 
 
 class Etagere:
@@ -141,3 +144,12 @@ class Etagere:
         if nouvelle < self.occupation():
             raise ValueError("La capacité ne peut pas être inférieure à l'occupation.")
         self._capacite_max = nouvelle
+
+    def renommer(self, nom: str):
+        if not isinstance(nom, str) or not 1 <= len(nom.strip()) <= 100:
+            raise ValueError("Le nom de l'étagère doit contenir entre 1 et 100 caractères.")
+        self.nom = nom.strip()
+
+    def verifier_suppression(self):
+        if self.occupation() > 0:
+            raise ValueError("Une étagère non vide ne peut pas être supprimée. Déplacez ou retirez ses bouteilles d'abord.")

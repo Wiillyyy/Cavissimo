@@ -27,6 +27,8 @@ class Etagere {
   + occupation() : int
   + peut_accueillir(n) : bool
   + changer_capacite(nouvelle) : void
+  + renommer(nom) : void
+  + verifier_suppression() : void
 }
 
 class Vin {
@@ -46,6 +48,7 @@ class Bouteille {
   - prix_achat : float
   - date_ajout : date
   - statut : str
+  + modifier_prix(prix_achat) : void
   + deplacer(nouvelle_etagere) : void
   + archiver(note, commentaire) : Evaluation
   + retirer() : void

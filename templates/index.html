@@ -30,14 +30,16 @@
           <div class="cellar-scene">
             {% for numero in range(emplacements_etageres) %}
             {% set etagere = etageres[numero] if numero < etageres|length else none %}
+            {% set places_affichees = [etagere.capacite_max, 10]|min if etagere else 10 %}
+            {% set niveaux = 1 if places_affichees <= 5 else 2 %}
             <article class="cellar-slot {{ 'is-built' if etagere else 'is-vacant' }}">
               <span class="slot-number">{{ '%02d'|format(numero + 1) }}</span>
               {% if not etagere %}<a class="slot-create" href="#creer-etagere" aria-label="Créer l'étagère de l'emplacement {{ numero + 1 }}">{% endif %}
               <div class="rack-3d" aria-hidden="true">
-                <div class="rack-face">
-                  {% for niveau in range(2) %}
+                <div class="rack-face {{ 'is-single-row' if niveaux == 1 else '' }}">
+                  {% for niveau in range(niveaux) %}
                   <div class="rack-tier">
-                    {% for colonne in range(5) %}
+                    {% for colonne in range([5, places_affichees - niveau * 5]|min) %}
                     {% set position = niveau * 5 + colonne %}
                     <svg class="rack-bottle {{ 'is-filled' if etagere and position < etagere.occupation else '' }}" viewBox="0 0 24 64" focusable="false">
                       <path class="bottle-body" d="M9 4h6v15c0 5 5 6 5 12v26c0 4-2 5-8 5s-8-1-8-5V31c0-6 5-7 5-12Z"/>
@@ -54,12 +56,35 @@
                 </div>
               </div>
               <div class="slot-caption">
-                <h3>{{ etagere.nom if etagere else 'À imaginer' }}</h3>
+                <h3 title="{{ etagere.nom if etagere else 'Emplacement disponible' }}">{{ etagere.nom if etagere else 'À imaginer' }}</h3>
                 {% if etagere %}
                 <p>{{ etagere.occupation }} <span>/ {{ etagere.capacite_max }} bouteilles</span></p>
                 <progress value="{{ etagere.occupation }}" max="{{ etagere.capacite_max }}" aria-label="Occupation de {{ etagere.nom }}"></progress>
                 <span class="slot-status">{{ etagere.capacite_max - etagere.occupation }} place(s) libre(s)</span>
-                {% if etagere.occupation > 10 %}<span class="slot-overflow">+ {{ etagere.occupation - 10 }} bouteille(s) hors aperçu</span>{% endif %}
+                <details class="shelf-edit">
+                  <summary>Modifier l’étagère</summary>
+                  <form action="{{ url_for('modifier_etagere', etagere_id=etagere.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                    <label for="nom-{{ etagere.id }}">Nom de l’étagère</label>
+                    <input id="nom-{{ etagere.id }}" name="nom" maxlength="100" value="{{ etagere.nom }}" required>
+                    <label for="capacite-{{ etagere.id }}">Nouvelle capacité</label>
+                    <input id="capacite-{{ etagere.id }}" name="capacite" type="number" min="1" max="1000000" step="1" value="{{ etagere.capacite_max }}" required>
+                    <button type="submit">Enregistrer</button>
+                  </form>
+                </details>
+                <details class="shelf-edit shelf-delete">
+                  <summary>Supprimer l’étagère</summary>
+                  {% if etagere.occupation == 0 %}
+                  <form action="{{ url_for('supprimer_etagere', etagere_id=etagere.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                    <input type="hidden" name="confirmation" value="oui">
+                    <p>Supprimer définitivement cette étagère vide ?</p>
+                    <button type="submit">Confirmer la suppression</button>
+                  </form>
+                  {% else %}
+                  <p>Retirez ses bouteilles dans <a href="#stock">Mes bouteilles</a> avant de la supprimer.</p>
+                  {% endif %}
+                </details>
                 {% else %}<p>Emplacement disponible</p><span class="slot-status">Créer une étagère ↗</span>{% endif %}
               </div>
               {% if not etagere %}</a>{% endif %}
@@ -132,8 +157,39 @@
       {% if bouteilles %}
       <div class="panel table-wrap"><table>
         <caption>Chaque ligne représente une bouteille physique.</caption>
-        <thead><tr><th scope="col">N°</th><th scope="col">Vin</th><th scope="col">Type / Année</th><th scope="col">Étagère</th><th scope="col">Prix d’achat</th><th scope="col">Ajoutée le</th></tr></thead>
-        <tbody>{% for bouteille in bouteilles %}<tr><td>#{{ bouteille.id }}</td><td><strong>{{ bouteille.nom_cuvee }}</strong><br><span>{{ bouteille.domaine }}</span></td><td>{{ bouteille.type }} · {{ bouteille.millesime }}</td><td>{{ bouteille.etagere }}</td><td>{{ bouteille.prix_centimes|euros }}</td><td>{{ bouteille.date_ajout }}</td></tr>{% endfor %}</tbody>
+        <thead><tr><th scope="col">N°</th><th scope="col">Vin</th><th scope="col">Type / Année</th><th scope="col">Étagère</th><th scope="col">Prix d’achat</th><th scope="col">Ajoutée le</th><th scope="col">Action</th></tr></thead>
+        <tbody>
+          {% for bouteille in bouteilles %}
+          <tr>
+            <td>#{{ bouteille.id }}</td>
+            <td><strong>{{ bouteille.nom_cuvee }}</strong><br><span>{{ bouteille.domaine }}</span></td>
+            <td>{{ bouteille.type }} · {{ bouteille.millesime }}</td>
+            <td>{{ bouteille.etagere }}</td>
+            <td>{{ bouteille.prix_centimes|euros }}</td>
+            <td>{{ bouteille.date_ajout }}</td>
+            <td>
+              <details class="bottle-edit">
+                <summary>Modifier le prix</summary>
+                <form action="{{ url_for('modifier_prix_bouteille', bouteille_id=bouteille.id) }}" method="post">
+                  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                  <label for="prix-{{ bouteille.id }}">Prix d’achat (€)</label>
+                  <input id="prix-{{ bouteille.id }}" name="prix_achat" type="number" min="0" max="1000000" step="0.01" value="{{ '%.2f'|format(bouteille.prix_centimes / 100) }}" required>
+                  <button type="submit">Enregistrer le prix</button>
+                </form>
+              </details>
+              <details class="bottle-remove">
+                <summary>Retirer</summary>
+                <form action="{{ url_for('retirer_bouteille', bouteille_id=bouteille.id) }}" method="post">
+                  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                  <input type="hidden" name="confirmation" value="oui">
+                  <p>Retirer définitivement la bouteille #{{ bouteille.id }} du stock ?</p>
+                  <button type="submit">Confirmer le retrait</button>
+                </form>
+              </details>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
       </table></div>
       {% else %}<p class="empty-stock">Votre cave est prête à accueillir ses premières bouteilles.</p>{% endif %}
     </section>

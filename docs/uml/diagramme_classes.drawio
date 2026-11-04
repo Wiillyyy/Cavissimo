@@ -30,7 +30,7 @@
 
 
         <mxCell id="10" value="Etagere" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="40" y="360" width="200" height="128" as="geometry" />
+          <mxGeometry x="40" y="360" width="200" height="156" as="geometry" />
         </mxCell>
         <mxCell id="11" value="- id: int&#10;- nom: str&#10;- capacite_max: int" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="10">
           <mxGeometry y="26" width="200" height="42" as="geometry" />
@@ -38,8 +38,8 @@
         <mxCell id="12" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="10">
           <mxGeometry y="68" width="200" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="13" value="+ occupation(): int&#10;+ peut_accueillir(n): bool&#10;+ changer_capacite(nouvelle): void" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="10">
-          <mxGeometry y="76" width="200" height="42" as="geometry" />
+        <mxCell id="13" value="+ occupation(): int&#10;+ peut_accueillir(n): bool&#10;+ changer_capacite(nouvelle): void&#10;+ verifier_suppression(): void&#10;+ renommer(nom): void" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="10">
+          <mxGeometry y="76" width="200" height="70" as="geometry" />
         </mxCell>
 
 
@@ -58,7 +58,7 @@
 
 
         <mxCell id="18" value="Bouteille" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=1;resizeParent=0;resizeParentMax=0;collapsible=0;marginBottom=0;swimlaneFillColor=#ffffff;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="440" y="280" width="220" height="140" as="geometry" />
+          <mxGeometry x="440" y="280" width="220" height="154" as="geometry" />
         </mxCell>
         <mxCell id="19" value="- id: int&#10;- prix_achat: float&#10;- date_ajout: date&#10;- statut: str" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="18">
           <mxGeometry y="26" width="220" height="56" as="geometry" />
@@ -66,8 +66,8 @@
         <mxCell id="20" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="18">
           <mxGeometry y="82" width="220" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="21" value="+ deplacer(nouvelle_etagere): void&#10;+ archiver(note, commentaire): Evaluation&#10;+ retirer(): void" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="18">
-          <mxGeometry y="90" width="220" height="42" as="geometry" />
+        <mxCell id="21" value="+ deplacer(nouvelle_etagere): void&#10;+ archiver(note, commentaire): Evaluation&#10;+ retirer(): void&#10;+ modifier_prix(prix_achat): void" style="text;horizontal=1;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;portConstraint=eastwest;" vertex="1" parent="18">
+          <mxGeometry y="90" width="220" height="56" as="geometry" />
         </mxCell>
 
 

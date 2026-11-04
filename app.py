@@ -143,6 +143,50 @@ def creer_app(config=None):
         flash("Étagère créée !", "succes")
         return redirect(url_for("accueil", _anchor="etageres"))
 
+    @app.post("/etageres/<int:etagere_id>/supprimer")
+    def supprimer_etagere(etagere_id):
+        try:
+            if request.form.get("confirmation") != "oui":
+                raise ValueError("Confirmez la suppression de l'étagère.")
+            database.supprimer_etagere(app.config["DATABASE"], g.utilisateur.id, etagere_id)
+        except PermissionError:
+            abort(404)
+        except ValueError as erreur:
+            flash(str(erreur), "erreur")
+            return afficher_cave(400)
+        flash("Étagère supprimée. Son emplacement est de nouveau disponible.", "succes")
+        return redirect(url_for("accueil", _anchor="etageres"))
+
+    @app.post("/etageres/<int:etagere_id>/modifier")
+    def modifier_etagere(etagere_id):
+        try:
+            database.modifier_etagere(
+                app.config["DATABASE"], g.utilisateur.id, etagere_id,
+                request.form.get("nom", ""), entier_positif(request.form.get("capacite")),
+            )
+        except PermissionError:
+            abort(404)
+        except ValueError as erreur:
+            flash(str(erreur), "erreur")
+            return afficher_cave(400)
+        flash("Étagère mise à jour !", "succes")
+        return redirect(url_for("accueil", _anchor="etageres"))
+
+    @app.post("/etageres/<int:etagere_id>/capacite")
+    def changer_capacite(etagere_id):
+        try:
+            database.changer_capacite(
+                app.config["DATABASE"], g.utilisateur.id, etagere_id,
+                entier_positif(request.form.get("capacite")),
+            )
+        except PermissionError:
+            abort(404)
+        except ValueError as erreur:
+            flash(str(erreur), "erreur")
+            return afficher_cave(400)
+        flash("Capacité mise à jour !", "succes")
+        return redirect(url_for("accueil", _anchor="etageres"))
+
     @app.post("/vins")
     def creer_vin():
         try:
@@ -171,6 +215,35 @@ def creer_app(config=None):
             flash(str(erreur), "erreur")
             return afficher_cave(400)
         flash("Bouteilles rangées dans la cave !", "succes")
+        return redirect(url_for("accueil", _anchor="stock"))
+
+    @app.post("/bouteilles/<int:bouteille_id>/prix")
+    def modifier_prix_bouteille(bouteille_id):
+        try:
+            database.modifier_prix_bouteille(
+                app.config["DATABASE"], g.utilisateur.id, bouteille_id,
+                convertir_prix(request.form.get("prix_achat", "")),
+            )
+        except PermissionError:
+            abort(404)
+        except ValueError as erreur:
+            flash(str(erreur), "erreur")
+            return afficher_cave(400)
+        flash("Prix d'achat mis à jour !", "succes")
+        return redirect(url_for("accueil", _anchor="stock"))
+
+    @app.post("/bouteilles/<int:bouteille_id>/retirer")
+    def retirer_bouteille(bouteille_id):
+        try:
+            if request.form.get("confirmation") != "oui":
+                raise ValueError("Confirmez le retrait définitif de cette bouteille.")
+            database.retirer_bouteille(app.config["DATABASE"], g.utilisateur.id, bouteille_id)
+        except PermissionError:
+            abort(404)
+        except ValueError as erreur:
+            flash(str(erreur), "erreur")
+            return afficher_cave(400)
+        flash("Bouteille retirée. Une place est libérée sur son étagère.", "succes")
         return redirect(url_for("accueil", _anchor="stock"))
 
     return app
